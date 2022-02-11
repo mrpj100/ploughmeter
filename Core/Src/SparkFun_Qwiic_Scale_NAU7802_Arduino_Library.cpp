@@ -27,25 +27,21 @@
 
 #include "SparkFun_Qwiic_Scale_NAU7802_Arduino_Library.h"
 
-//Constructor
-NAU7802::NAU7802()
-{
-}
 
 //Sets up the NAU7802 for basic function
 //If initialize is true (or not specified), default init and calibration is performed
 //If initialize is false, then it's up to the caller to initalize and calibrate
 //Returns true upon completion
-bool NAU7802::begin(TwoWire &wirePort, bool initialize)
+bool NAU7802_begin(TwoWire &wirePort, bool initialize)
 {
   //Get user's options
   _i2cPort = &wirePort;
 
   //Check if the device ack's over I2C
-  if (isConnected() == false)
+  if (NAU7802_isConnected() == false)
   {
     //There are rare times when the sensor is occupied and doesn't ack. A 2nd try resolves this.
-    if (isConnected() == false)
+    if (NAU7802_isConnected() == false)
       return (false);
   }
 
@@ -53,21 +49,21 @@ bool NAU7802::begin(TwoWire &wirePort, bool initialize)
 
   if (initialize)
   {
-    result &= reset(); //Reset all registers
+    result &= NAU7802_reset(); //Reset all registers
 
-    result &= powerUp(); //Power on analog and digital sections of the scale
+    result &= NAU7802_powerUp(); //Power on analog and digital sections of the scale
 
-    result &= setLDO(NAU7802_LDO_3V3); //Set LDO to 3.3V
+    result &= NAU7802_setLDO(NAU7802_LDO_3V3); //Set LDO to 3.3V
 
-    result &= setGain(NAU7802_GAIN_128); //Set gain to 128
+    result &= NAU7802_setGain(NAU7802_GAIN_128); //Set gain to 128
 
-    result &= setSampleRate(NAU7802_SPS_80); //Set samples per second to 10
+    result &= NAU7802_setSampleRate(NAU7802_SPS_80); //Set samples per second to 10
 
-    result &= setRegister(NAU7802_ADC, 0x30); //Turn off CLK_CHP. From 9.1 power on sequencing.
+    result &= NAU7802_setRegister(NAU7802_ADC, 0x30); //Turn off CLK_CHP. From 9.1 power on sequencing.
 
-    result &= setBit(NAU7802_PGA_PWR_PGA_CAP_EN, NAU7802_PGA_PWR); //Enable 330pF decoupling cap on chan 2. From 9.14 application circuit note.
+    result &= NAU7802_setBit(NAU7802_PGA_PWR_PGA_CAP_EN, NAU7802_PGA_PWR); //Enable 330pF decoupling cap on chan 2. From 9.14 application circuit note.
 
-    result &= calibrateAFE(); //Re-cal analog front end when we change gain, sample rate, or channel
+    result &= NAU7802_calibrateAFE(); //Re-cal analog front end when we change gain, sample rate, or channel
   }
 
   return (result);
@@ -75,7 +71,7 @@ bool NAU7802::begin(TwoWire &wirePort, bool initialize)
 
 //Returns true if device is present
 //Tests for device ack to I2C address
-bool NAU7802::isConnected()
+bool NAU7802_isConnected()
 {
   _i2cPort->beginTransmission(_deviceAddress);
   if (_i2cPort->endTransmission() != 0)
@@ -84,36 +80,36 @@ bool NAU7802::isConnected()
 }
 
 //Returns true if Cycle Ready bit is set (conversion is complete)
-bool NAU7802::available()
+bool NAU7802_available()
 {
-  return (getBit(NAU7802_PU_CTRL_CR, NAU7802_PU_CTRL));
+  return (NAU7802_getBit(NAU7802_PU_CTRL_CR, NAU7802_PU_CTRL));
 }
 
 //Calibrate analog front end of system. Returns true if CAL_ERR bit is 0 (no error)
 //Takes approximately 344ms to calibrate; wait up to 1000ms.
 //It is recommended that the AFE be re-calibrated any time the gain, SPS, or channel number is changed.
-bool NAU7802::calibrateAFE()
+bool NAU7802_calibrateAFE()
 {
-  beginCalibrateAFE();
-  return waitForCalibrateAFE(1000);
+	NAU7802_beginCalibrateAFE();
+  return NAU7802_waitForCalibrateAFE(1000);
 }
 
 //Begin asynchronous calibration of the analog front end.
 // Poll for completion with calAFEStatus() or wait with waitForCalibrateAFE()
-void NAU7802::beginCalibrateAFE()
+void NAU7802_beginCalibrateAFE()
 {
-  setBit(NAU7802_CTRL2_CALS, NAU7802_CTRL2);
+	NAU7802_setBit(NAU7802_CTRL2_CALS, NAU7802_CTRL2);
 }
 
 //Check calibration status.
-NAU7802_Cal_Status NAU7802::calAFEStatus()
+NAU7802_Cal_Status NAU7802_calAFEStatus()
 {
-  if (getBit(NAU7802_CTRL2_CALS, NAU7802_CTRL2))
+  if (NAU7802_getBit(NAU7802_CTRL2_CALS, NAU7802_CTRL2))
   {
     return NAU7802_CAL_IN_PROGRESS;
   }
 
-  if (getBit(NAU7802_CTRL2_CAL_ERROR, NAU7802_CTRL2))
+  if (NAU7802_getBit(NAU7802_CTRL2_CAL_ERROR, NAU7802_CTRL2))
   {
     return NAU7802_CAL_FAILURE;
   }
@@ -125,12 +121,12 @@ NAU7802_Cal_Status NAU7802::calAFEStatus()
 //Wait for asynchronous AFE calibration to complete with optional timeout.
 //If timeout is not specified (or set to 0), then wait indefinitely.
 //Returns true if calibration completes succsfully, otherwise returns false.
-bool NAU7802::waitForCalibrateAFE(uint32_t timeout_ms)
+bool NAU7802_waitForCalibrateAFE(uint32_t timeout_ms)
 {
   uint32_t begin = millis();
   NAU7802_Cal_Status cal_ready;
 
-  while ((cal_ready = calAFEStatus()) == NAU7802_CAL_IN_PROGRESS)
+  while ((cal_ready = NAU7802_calAFEStatus()) == NAU7802_CAL_IN_PROGRESS)
   {
     if ((timeout_ms > 0) && ((millis() - begin) > timeout_ms))
     {
@@ -148,20 +144,20 @@ bool NAU7802::waitForCalibrateAFE(uint32_t timeout_ms)
 
 //Set the readings per second
 //10, 20, 40, 80, and 320 samples per second is available
-bool NAU7802::setSampleRate(uint8_t rate)
+bool NAU7802_setSampleRate(uint8_t rate)
 {
   if (rate > 0b111)
     rate = 0b111; //Error check
 
-  uint8_t value = getRegister(NAU7802_CTRL2);
+  uint8_t value = NAU7802_getRegister(NAU7802_CTRL2);
   value &= 0b10001111; //Clear CRS bits
   value |= rate << 4;  //Mask in new CRS bits
 
-  return (setRegister(NAU7802_CTRL2, value));
+  return (NAU7802_setRegister(NAU7802_CTRL2, value));
 }
 
 //Select between 1 and 2
-bool NAU7802::setChannel(uint8_t channelNumber)
+bool NAU7802_setChannel(uint8_t channelNumber)
 {
   if (channelNumber == NAU7802_CHANNEL_1)
     return (clearBit(NAU7802_CTRL2_CHS, NAU7802_CTRL2)); //Channel 1 (default)
@@ -170,7 +166,7 @@ bool NAU7802::setChannel(uint8_t channelNumber)
 }
 
 //Power up digital and analog sections of scale
-bool NAU7802::powerUp()
+bool NAU7802_powerUp()
 {
   setBit(NAU7802_PU_CTRL_PUD, NAU7802_PU_CTRL);
   setBit(NAU7802_PU_CTRL_PUA, NAU7802_PU_CTRL);
@@ -179,7 +175,7 @@ bool NAU7802::powerUp()
   uint8_t counter = 0;
   while (1)
   {
-    if (getBit(NAU7802_PU_CTRL_PUR, NAU7802_PU_CTRL) == true)
+    if (NAU7802_getBit(NAU7802_PU_CTRL_PUR, NAU7802_PU_CTRL) == true)
       break; //Good to go
     delay(1);
     if (counter++ > 100)
@@ -189,60 +185,60 @@ bool NAU7802::powerUp()
 }
 
 //Puts scale into low-power mode
-bool NAU7802::powerDown()
+bool NAU7802_powerDown()
 {
-  clearBit(NAU7802_PU_CTRL_PUD, NAU7802_PU_CTRL);
-  return (clearBit(NAU7802_PU_CTRL_PUA, NAU7802_PU_CTRL));
+	NAU7802_clearBit(NAU7802_PU_CTRL_PUD, NAU7802_PU_CTRL);
+  return (NAU7802_clearBit(NAU7802_PU_CTRL_PUA, NAU7802_PU_CTRL));
 }
 
 //Resets all registers to Power Of Defaults
 bool NAU7802::reset()
 {
-  setBit(NAU7802_PU_CTRL_RR, NAU7802_PU_CTRL); //Set RR
+  NAU7802_setBit(NAU7802_PU_CTRL_RR, NAU7802_PU_CTRL); //Set RR
   delay(1);
-  return (clearBit(NAU7802_PU_CTRL_RR, NAU7802_PU_CTRL)); //Clear RR to leave reset state
+  return (NAU7802_clearBit(NAU7802_PU_CTRL_RR, NAU7802_PU_CTRL)); //Clear RR to leave reset state
 }
 
 //Set the onboard Low-Drop-Out voltage regulator to a given value
 //2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.2, 4.5V are available
-bool NAU7802::setLDO(uint8_t ldoValue)
+bool NAU7802_setLDO(uint8_t ldoValue)
 {
   if (ldoValue > 0b111)
     ldoValue = 0b111; //Error check
 
   //Set the value of the LDO
-  uint8_t value = getRegister(NAU7802_CTRL1);
+  uint8_t value = NAU7802_getRegister(NAU7802_CTRL1);
   value &= 0b11000111;    //Clear LDO bits
   value |= ldoValue << 3; //Mask in new LDO bits
-  setRegister(NAU7802_CTRL1, value);
+  NAU7802_setRegister(NAU7802_CTRL1, value);
 
-  return (setBit(NAU7802_PU_CTRL_AVDDS, NAU7802_PU_CTRL)); //Enable the internal LDO
+  return (NAU7802_setBit(NAU7802_PU_CTRL_AVDDS, NAU7802_PU_CTRL)); //Enable the internal LDO
 }
 
 //Set the gain
 //x1, 2, 4, 8, 16, 32, 64, 128 are avaialable
-bool NAU7802::setGain(uint8_t gainValue)
+bool NAU7802_setGain(uint8_t gainValue)
 {
   if (gainValue > 0b111)
     gainValue = 0b111; //Error check
 
-  uint8_t value = getRegister(NAU7802_CTRL1);
+  uint8_t value = NAU7802_getRegister(NAU7802_CTRL1);
   value &= 0b11111000; //Clear gain bits
   value |= gainValue;  //Mask in new bits
 
-  return (setRegister(NAU7802_CTRL1, value));
+  return (NAU7802_setRegister(NAU7802_CTRL1, value));
 }
 
 //Get the revision code of this IC
-uint8_t NAU7802::getRevisionCode()
+uint8_t NAU7802_getRevisionCode()
 {
-  uint8_t revisionCode = getRegister(NAU7802_DEVICE_REV);
+  uint8_t revisionCode = NAU7802_getRegister(NAU7802_DEVICE_REV);
   return (revisionCode & 0x0F);
 }
 
 //Returns 24-bit reading
 //Assumes CR Cycle Ready bit (ADC conversion complete) has been checked to be 1
-int32_t NAU7802::getReading()
+int32_t NAU7802_getReading()
 {
   _i2cPort->beginTransmission(_deviceAddress);
   _i2cPort->write(NAU7802_ADCO_B2);
@@ -275,7 +271,7 @@ int32_t NAU7802::getReading()
 
 //Return the average of a given number of readings
 //Gives up after 1000ms so don't call this function to average 8 samples setup at 1Hz output (requires 8s)
-int32_t NAU7802::getAverage(uint8_t averageAmount)
+int32_t NAU7802_getAverage(uint8_t averageAmount)
 {
   long total = 0;
   uint8_t samplesAquired = 0;
@@ -285,7 +281,7 @@ int32_t NAU7802::getAverage(uint8_t averageAmount)
   {
     if (available() == true)
     {
-      total += getReading();
+      total += NAU7802_getReading();
       if (++samplesAquired == averageAmount)
         break; //All done
     }
@@ -299,44 +295,44 @@ int32_t NAU7802::getAverage(uint8_t averageAmount)
 }
 
 //Call when scale is setup, level, at running temperature, with nothing on it
-void NAU7802::calculateZeroOffset(uint8_t averageAmount)
+void NAU7802_calculateZeroOffset(uint8_t averageAmount)
 {
-  setZeroOffset(getAverage(averageAmount));
+	NAU7802_setZeroOffset(NAU7802_getAverage(averageAmount));
 }
 
 //Sets the internal variable. Useful for users who are loading values from NVM.
-void NAU7802::setZeroOffset(int32_t newZeroOffset)
+void NAU7802_setZeroOffset(int32_t newZeroOffset)
 {
-  _zeroOffset = newZeroOffset;
+  _NAU7802_zeroOffset = newZeroOffset;
 }
 
-int32_t NAU7802::getZeroOffset()
+int32_t NAU7802_getZeroOffset()
 {
-  return (_zeroOffset);
+  return (_NAU7802_zeroOffset);
 }
 
 //Call after zeroing. Provide the float weight sitting on scale. Units do not matter.
-void NAU7802::calculateCalibrationFactor(float weightOnScale, uint8_t averageAmount)
+void NAU7802_calculateCalibrationFactor(float weightOnScale, uint8_t averageAmount)
 {
-  int32_t onScale = getAverage(averageAmount);
+  int32_t onScale = NAU7802_getAverage(averageAmount);
   float newCalFactor = (onScale - _zeroOffset) / (float)weightOnScale;
-  setCalibrationFactor(newCalFactor);
+  NAU7802_setCalibrationFactor(newCalFactor);
 }
 
 //Pass a known calibration factor into library. Helpful if users is loading settings from NVM.
 //If you don't know your cal factor, call setZeroOffset(), then calculateCalibrationFactor() with a known weight
-void NAU7802::setCalibrationFactor(float newCalFactor)
+void NAU7802_setCalibrationFactor(float newCalFactor)
 {
-  _calibrationFactor = newCalFactor;
+  _NAU7802_calibrationFactor = newCalFactor;
 }
 
-float NAU7802::getCalibrationFactor()
+float NAU7802_getCalibrationFactor()
 {
-  return (_calibrationFactor);
+  return (_NAU7802_calibrationFactor);
 }
 
 //Returns the y of y = mx + b using the current weight on scale, the cal factor, and the offset.
-float NAU7802::getWeight(bool allowNegativeWeights, uint8_t samplesToTake)
+float NAU7802_getWeight(bool allowNegativeWeights, uint8_t samplesToTake)
 {
   int32_t onScale = getAverage(samplesToTake);
 
@@ -345,52 +341,52 @@ float NAU7802::getWeight(bool allowNegativeWeights, uint8_t samplesToTake)
   //causing the weight to be negative or jump to millions of pounds
   if (allowNegativeWeights == false)
   {
-    if (onScale < _zeroOffset)
-      onScale = _zeroOffset; //Force reading to zero
+    if (onScale < _NAU7802_zeroOffset)
+      onScale = _NAU7802_zeroOffset; //Force reading to zero
   }
 
-  float weight = (onScale - _zeroOffset) / _calibrationFactor;
+  float weight = (onScale - _NAU7802_zeroOffset) / _NAU7802_calibrationFactor;
   return (weight);
 }
 
 //Set Int pin to be high when data is ready (default)
-bool NAU7802::setIntPolarityHigh()
+bool NAU7802_setIntPolarityHigh()
 {
-  return (clearBit(NAU7802_CTRL1_CRP, NAU7802_CTRL1)); //0 = CRDY pin is high active (ready when 1)
+  return (NAU7802_clearBit(NAU7802_CTRL1_CRP, NAU7802_CTRL1)); //0 = CRDY pin is high active (ready when 1)
 }
 
 //Set Int pin to be low when data is ready
-bool NAU7802::setIntPolarityLow()
+bool NAU7802_setIntPolarityLow()
 {
-  return (setBit(NAU7802_CTRL1_CRP, NAU7802_CTRL1)); //1 = CRDY pin is low active (ready when 0)
+  return (NAU7802_setBit(NAU7802_CTRL1_CRP, NAU7802_CTRL1)); //1 = CRDY pin is low active (ready when 0)
 }
 
 //Mask & set a given bit within a register
-bool NAU7802::setBit(uint8_t bitNumber, uint8_t registerAddress)
+bool NAU7802_setBit(uint8_t bitNumber, uint8_t registerAddress)
 {
-  uint8_t value = getRegister(registerAddress);
+  uint8_t value = NAU7802_getRegister(registerAddress);
   value |= (1 << bitNumber); //Set this bit
-  return (setRegister(registerAddress, value));
+  return (NAU7802_setRegister(registerAddress, value));
 }
 
 //Mask & clear a given bit within a register
-bool NAU7802::clearBit(uint8_t bitNumber, uint8_t registerAddress)
+bool NAU7802_clearBit(uint8_t bitNumber, uint8_t registerAddress)
 {
-  uint8_t value = getRegister(registerAddress);
+  uint8_t value = NAU7802_getRegister(registerAddress);
   value &= ~(1 << bitNumber); //Set this bit
-  return (setRegister(registerAddress, value));
+  return (NAU7802_setRegister(registerAddress, value));
 }
 
 //Return a given bit within a register
-bool NAU7802::getBit(uint8_t bitNumber, uint8_t registerAddress)
+bool NAU7802_getBit(uint8_t bitNumber, uint8_t registerAddress)
 {
-  uint8_t value = getRegister(registerAddress);
+  uint8_t value = NAU7802_getRegister(registerAddress);
   value &= (1 << bitNumber); //Clear all but this bit
   return (value);
 }
 
 //Get contents of a register
-uint8_t NAU7802::getRegister(uint8_t registerAddress)
+uint8_t NAU7802_getRegister(uint8_t registerAddress)
 {
   _i2cPort->beginTransmission(_deviceAddress);
   _i2cPort->write(registerAddress);
@@ -407,7 +403,7 @@ uint8_t NAU7802::getRegister(uint8_t registerAddress)
 
 //Send a given value to be written to given address
 //Return true if successful
-bool NAU7802::setRegister(uint8_t registerAddress, uint8_t value)
+bool NAU7802_setRegister(uint8_t registerAddress, uint8_t value)
 {
   _i2cPort->beginTransmission(_deviceAddress);
   _i2cPort->write(registerAddress);
