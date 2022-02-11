@@ -21,29 +21,29 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, DATA
   8 .data         0000000c  20000000  08007b34  00020000  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-  9 .bss          000002e8  2000000c  08007b40  0002000c  2**2
+  9 .bss          0000033c  2000000c  08007b40  0002000c  2**2
                   ALLOC
- 10 ._user_heap_stack 00000604  200002f4  08007b40  000202f4  2**0
+ 10 ._user_heap_stack 00000600  20000348  08007b40  00020348  2**0
                   ALLOC
  11 .ARM.attributes 00000030  00000000  00000000  0002000c  2**0
                   CONTENTS, READONLY
- 12 .debug_info   0001aaec  00000000  00000000  0002003c  2**0
+ 12 .debug_info   0001ab3b  00000000  00000000  0002003c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 13 .debug_abbrev 00002dca  00000000  00000000  0003ab28  2**0
+ 13 .debug_abbrev 00002dca  00000000  00000000  0003ab77  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_aranges 00001770  00000000  00000000  0003d8f8  2**3
+ 14 .debug_aranges 00001770  00000000  00000000  0003d948  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_ranges 00001648  00000000  00000000  0003f068  2**3
+ 15 .debug_ranges 00001648  00000000  00000000  0003f0b8  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  000258dc  00000000  00000000  000406b0  2**0
+ 16 .debug_macro  000258e7  00000000  00000000  00040700  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0001949a  00000000  00000000  00065f8c  2**0
+ 17 .debug_line   000194cc  00000000  00000000  00065fe7  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000ee5e2  00000000  00000000  0007f426  2**0
+ 18 .debug_str    000ee66f  00000000  00000000  0007f4b3  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000053  00000000  00000000  0016da08  2**0
+ 19 .comment      00000053  00000000  00000000  0016db22  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00006520  00000000  00000000  0016da5c  2**2
+ 20 .debug_frame  00006520  00000000  00000000  0016db78  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -1317,7 +1317,7 @@ static void MX_USART2_UART_Init(void)
  80009ee:	bf00      	nop
  80009f0:	bd80      	pop	{r7, pc}
  80009f2:	bf00      	nop
- 80009f4:	2000026c 	.word	0x2000026c
+ 80009f4:	200002c0 	.word	0x200002c0
  80009f8:	40004400 	.word	0x40004400
 
 080009fc <MX_GPIO_Init>:
@@ -3365,7 +3365,7 @@ bool assemble_and_send_packet(void){
  80017bc:	20000134 	.word	0x20000134
  80017c0:	20000268 	.word	0x20000268
  80017c4:	200000b4 	.word	0x200000b4
- 80017c8:	2000026c 	.word	0x2000026c
+ 80017c8:	200002c0 	.word	0x200002c0
 
 080017cc <Error_Handler>:
 /**
@@ -4484,7 +4484,7 @@ LoopForever:
 	ldr	r2, =_sbss
  8001d7c:	2000000c 	.word	0x2000000c
 	ldr	r3, = _ebss
- 8001d80:	200002f4 	.word	0x200002f4
+ 8001d80:	20000348 	.word	0x20000348
 
 08001d84 <ADC1_IRQHandler>:
  * @retval : None
@@ -4663,7 +4663,7 @@ __weak void HAL_IncTick(void)
  8001e4c:	4770      	bx	lr
  8001e4e:	bf00      	nop
  8001e50:	20000008 	.word	0x20000008
- 8001e54:	200002f0 	.word	0x200002f0
+ 8001e54:	20000344 	.word	0x20000344
 
 08001e58 <HAL_GetTick>:
   * @note This function is declared as __weak to be overwritten in case of other
@@ -4683,7 +4683,7 @@ __weak uint32_t HAL_GetTick(void)
  8001e64:	f85d 7b04 	ldr.w	r7, [sp], #4
  8001e68:	4770      	bx	lr
  8001e6a:	bf00      	nop
- 8001e6c:	200002f0 	.word	0x200002f0
+ 8001e6c:	20000344 	.word	0x20000344
 
 08001e70 <HAL_Delay>:
   *       implementations in user file.
