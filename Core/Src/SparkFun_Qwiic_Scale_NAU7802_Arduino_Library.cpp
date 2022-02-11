@@ -1,4 +1,9 @@
 /*
+  This library was ported to STM32 by Mike Prior-Jones, February 2022.
+
+  The original SparkFun copyright declaration and information is below.
+
+
   This is an Arduino library written for the NAU7802 24-bit wheatstone
   bridge and load cell amplifier.
   By Nathan Seidle @ SparkFun Electronics, March 3nd, 2019
