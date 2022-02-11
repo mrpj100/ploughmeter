@@ -165,60 +165,60 @@ typedef enum
   NAU7802_CAL_FAILURE = 2,
 } NAU7802_Cal_Status;
 
-class NAU7802
-{
-public:
-  NAU7802();                                               //Default constructor
-  bool begin(TwoWire &wirePort = Wire, bool reset = true); //Check communication and initialize sensor
-  bool isConnected();                                      //Returns true if device acks at the I2C address
 
-  bool available();                          //Returns true if Cycle Ready bit is set (conversion is complete)
-  int32_t getReading();                      //Returns 24-bit reading. Assumes CR Cycle Ready bit (ADC conversion complete) has been checked by .available()
-  int32_t getAverage(uint8_t samplesToTake); //Return the average of a given number of readings
 
-  void calculateZeroOffset(uint8_t averageAmount = 8); //Also called taring. Call this with nothing on the scale
-  void setZeroOffset(int32_t newZeroOffset);           //Sets the internal variable. Useful for users who are loading values from NVM.
-  int32_t getZeroOffset();                             //Ask library for this value. Useful for storing value into NVM.
+// Public functions
 
-  void calculateCalibrationFactor(float weightOnScale, uint8_t averageAmount = 8); //Call this with the value of the thing on the scale. Sets the calibration factor based on the weight on scale and zero offset.
-  void setCalibrationFactor(float calFactor);                                      //Pass a known calibration factor into library. Helpful if users is loading settings from NVM.
-  float getCalibrationFactor();                                                    //Ask library for this value. Useful for storing value into NVM.
+  bool NAU7802_begin(TwoWire &wirePort = Wire, bool reset = true); //Check communication and initialize sensor
+  bool NAU7802_isConnected();                                      //Returns true if device acks at the I2C address
 
-  float getWeight(bool allowNegativeWeights = false, uint8_t samplesToTake = 8); //Once you've set zero offset and cal factor, you can ask the library to do the calculations for you.
+  bool NAU7802_available();                          //Returns true if Cycle Ready bit is set (conversion is complete)
+  int32_t NAU7802_getReading();                      //Returns 24-bit reading. Assumes CR Cycle Ready bit (ADC conversion complete) has been checked by .available()
+  int32_t NAU7802_getAverage(uint8_t samplesToTake); //Return the average of a given number of readings
 
-  bool setGain(uint8_t gainValue);        //Set the gain. x1, 2, 4, 8, 16, 32, 64, 128 are available
-  bool setLDO(uint8_t ldoValue);          //Set the onboard Low-Drop-Out voltage regulator to a given value. 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.2, 4.5V are avaialable
-  bool setSampleRate(uint8_t rate);       //Set the readings per second. 10, 20, 40, 80, and 320 samples per second is available
-  bool setChannel(uint8_t channelNumber); //Select between 1 and 2
+  void NAU7802_calculateZeroOffset(uint8_t averageAmount = 8); //Also called taring. Call this with nothing on the scale
+  void NAU7802_setZeroOffset(int32_t newZeroOffset);           //Sets the internal variable. Useful for users who are loading values from NVM.
+  int32_t NAU7802_getZeroOffset();                             //Ask library for this value. Useful for storing value into NVM.
 
-  bool calibrateAFE();                               //Synchronous calibration of the analog front end of the NAU7802. Returns true if CAL_ERR bit is 0 (no error)
-  void beginCalibrateAFE();                          //Begin asynchronous calibration of the analog front end of the NAU7802. Poll for completion with calAFEStatus() or wait with waitForCalibrateAFE().
-  bool waitForCalibrateAFE(uint32_t timeout_ms = 0); //Wait for asynchronous AFE calibration to complete with optional timeout.
-  NAU7802_Cal_Status calAFEStatus();                 //Check calibration status.
+  void NAU7802_calculateCalibrationFactor(float weightOnScale, uint8_t averageAmount = 8); //Call this with the value of the thing on the scale. Sets the calibration factor based on the weight on scale and zero offset.
+  void NAU7802_setCalibrationFactor(float calFactor);                                      //Pass a known calibration factor into library. Helpful if users is loading settings from NVM.
+  float NAU7802_getCalibrationFactor();                                                    //Ask library for this value. Useful for storing value into NVM.
 
-  bool reset(); //Resets all registers to Power Of Defaults
+  float NAU7802_getWeight(bool allowNegativeWeights = false, uint8_t samplesToTake = 8); //Once you've set zero offset and cal factor, you can ask the library to do the calculations for you.
 
-  bool powerUp();   //Power up digital and analog sections of scale, ~2mA
-  bool powerDown(); //Puts scale into low-power 200nA mode
+  bool NAU7802_setGain(uint8_t gainValue);        //Set the gain. x1, 2, 4, 8, 16, 32, 64, 128 are available
+  bool NAU7802_setLDO(uint8_t ldoValue);          //Set the onboard Low-Drop-Out voltage regulator to a given value. 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.2, 4.5V are avaialable
+  bool NAU7802_setSampleRate(uint8_t rate);       //Set the readings per second. 10, 20, 40, 80, and 320 samples per second is available
+  bool NAU7802_setChannel(uint8_t channelNumber); //Select between 1 and 2
 
-  bool setIntPolarityHigh(); //Set Int pin to be high when data is ready (default)
-  bool setIntPolarityLow();  //Set Int pin to be low when data is ready
+  bool NAU7802_calibrateAFE();                               //Synchronous calibration of the analog front end of the NAU7802. Returns true if CAL_ERR bit is 0 (no error)
+  void NAU7802_beginCalibrateAFE();                          //Begin asynchronous calibration of the analog front end of the NAU7802. Poll for completion with calAFEStatus() or wait with waitForCalibrateAFE().
+  bool NAU7802_waitForCalibrateAFE(uint32_t timeout_ms = 0); //Wait for asynchronous AFE calibration to complete with optional timeout.
+  NAU7802_Cal_Status NAU7802_calAFEStatus();                 //Check calibration status.
 
-  uint8_t getRevisionCode(); //Get the revision code of this IC. Always 0x0F.
+  bool NAU7802_reset(); //Resets all registers to Power Of Defaults
 
-  bool setBit(uint8_t bitNumber, uint8_t registerAddress);   //Mask & set a given bit within a register
-  bool clearBit(uint8_t bitNumber, uint8_t registerAddress); //Mask & clear a given bit within a register
-  bool getBit(uint8_t bitNumber, uint8_t registerAddress);   //Return a given bit within a register
+  bool NAU7802_powerUp();   //Power up digital and analog sections of scale, ~2mA
+  bool NAU7802_powerDown(); //Puts scale into low-power 200nA mode
 
-  uint8_t getRegister(uint8_t registerAddress);             //Get contents of a register
-  bool setRegister(uint8_t registerAddress, uint8_t value); //Send a given value to be written to given address. Return true if successful
+  bool NAU7802_setIntPolarityHigh(); //Set Int pin to be high when data is ready (default)
+  bool NAU7802_setIntPolarityLow();  //Set Int pin to be low when data is ready
 
-private:
+  uint8_t NAU7802_getRevisionCode(); //Get the revision code of this IC. Always 0x0F.
+
+  bool NAU7802_setBit(uint8_t bitNumber, uint8_t registerAddress);   //Mask & set a given bit within a register
+  bool NAU7802_clearBit(uint8_t bitNumber, uint8_t registerAddress); //Mask & clear a given bit within a register
+  bool NAU7802_getBit(uint8_t bitNumber, uint8_t registerAddress);   //Return a given bit within a register
+
+  uint8_t NAU7802_getRegister(uint8_t registerAddress);             //Get contents of a register
+  bool NAU7802_setRegister(uint8_t registerAddress, uint8_t value); //Send a given value to be written to given address. Return true if successful
+
+// Private variables
   TwoWire *_i2cPort;                   //This stores the user's requested i2c port
-  const uint8_t _deviceAddress = 0x2A; //Default unshifted 7-bit address of the NAU7802
+  const uint8_t _NAU7802_deviceAddress = 0x2A; //Default unshifted 7-bit address of the NAU7802
 
   //y = mx+b
-  int32_t _zeroOffset;      //This is b
-  float _calibrationFactor; //This is m. User provides this number so that we can output y when requested
-};
+  int32_t _NAU7802_zeroOffset;      //This is b
+  float _NAU7802_calibrationFactor; //This is m. User provides this number so that we can output y when requested
+
 #endif
