@@ -217,7 +217,7 @@ typedef enum
   bool NAU7802_setRegister(uint8_t registerAddress, uint8_t value); //Send a given value to be written to given address. Return true if successful
 
 // Private variables
-  I2C_HandleTypeDef _NAU7802_i2cPort;                   //This stores the user's requested i2c port
+  I2C_HandleTypeDef * _NAU7802_i2cPort;                   //This stores the user's requested i2c port
   const uint8_t _NAU7802_deviceAddress = 0x2A; //Default unshifted 7-bit address of the NAU7802
 
   //y = mx+b

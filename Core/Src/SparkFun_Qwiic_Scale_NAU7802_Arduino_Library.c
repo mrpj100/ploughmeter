@@ -27,7 +27,6 @@
 
 #include "SparkFun_Qwiic_Scale_NAU7802_Arduino_Library.h"
 
-bad
 
 //Sets up the NAU7802 for basic function
 //If initialize is true (or not specified), default init and calibration is performed
@@ -36,7 +35,7 @@ bad
 bool NAU7802_begin(I2C_HandleTypeDef * wirePort, bool initialize)
 {
   //Get user's options
-  _i2cPort = &wirePort;
+  _NAU7802_i2cPort = wirePort;
 
   //Check if the device ack's over I2C
   if (NAU7802_isConnected() == false)
@@ -193,7 +192,7 @@ bool NAU7802_powerDown()
 }
 
 //Resets all registers to Power Of Defaults
-bool NAU7802::reset()
+bool NAU7802_reset()
 {
   NAU7802_setBit(NAU7802_PU_CTRL_RR, NAU7802_PU_CTRL); //Set RR
   delay(1);
@@ -316,7 +315,7 @@ int32_t NAU7802_getZeroOffset()
 void NAU7802_calculateCalibrationFactor(float weightOnScale, uint8_t averageAmount)
 {
   int32_t onScale = NAU7802_getAverage(averageAmount);
-  float newCalFactor = (onScale - _zeroOffset) / (float)weightOnScale;
+  float newCalFactor = (onScale - _NAU7802_zeroOffset) / (float)weightOnScale;
   NAU7802_setCalibrationFactor(newCalFactor);
 }
 
