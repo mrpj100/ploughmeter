@@ -184,6 +184,7 @@ TEMPERATURE_DATA read_temperature_sensor(void);
 bool setup_imu_sensor(void);
 IMU_DATA read_imu_sensor(void);
 bool setup_tilt_sensor(void);
+bool setup_load_cell_sensor(void);
 TILT_DATA read_tilt_sensor(void);
 COND_DATA read_conductivity_sensor(void);
 PRES_DATA read_pressure_sensor(void);
@@ -271,6 +272,7 @@ int main(void)
     setup_tilt_sensor();
     setup_imu_sensor();
     setup_temperature_sensor();
+    setup_load_cell_sensor();
 
   //Enable Radio Modem
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
@@ -1313,6 +1315,14 @@ PRES_DATA read_pressure_sensor(void){
 
 	return data;
 }
+
+bool setup_load_cell_sensor(void) {
+
+
+	return true;
+}
+
+
 /**
   * @brief Assemble and send packet Function
   * @note	Function used to read peripheral sensor data (TILT-05, MPU9250, TMP117)
