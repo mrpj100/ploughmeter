@@ -171,22 +171,22 @@ typedef enum
 
 // Public functions
 
-  bool NAU7802_begin(TwoWire &wirePort = Wire, bool reset = true); //Check communication and initialize sensor
+  bool NAU7802_begin(I2C_HandleTypeDef wirePort, bool reset); //Check communication and initialize sensor. Default value for reset = true
   bool NAU7802_isConnected();                                      //Returns true if device acks at the I2C address
 
   bool NAU7802_available();                          //Returns true if Cycle Ready bit is set (conversion is complete)
   int32_t NAU7802_getReading();                      //Returns 24-bit reading. Assumes CR Cycle Ready bit (ADC conversion complete) has been checked by .available()
   int32_t NAU7802_getAverage(uint8_t samplesToTake); //Return the average of a given number of readings
 
-  void NAU7802_calculateZeroOffset(uint8_t averageAmount = 8); //Also called taring. Call this with nothing on the scale
+  void NAU7802_calculateZeroOffset(uint8_t averageAmount); //Also called taring. Call this with nothing on the scale. Default value averageAmount = 8
   void NAU7802_setZeroOffset(int32_t newZeroOffset);           //Sets the internal variable. Useful for users who are loading values from NVM.
   int32_t NAU7802_getZeroOffset();                             //Ask library for this value. Useful for storing value into NVM.
 
-  void NAU7802_calculateCalibrationFactor(float weightOnScale, uint8_t averageAmount = 8); //Call this with the value of the thing on the scale. Sets the calibration factor based on the weight on scale and zero offset.
+  void NAU7802_calculateCalibrationFactor(float weightOnScale, uint8_t averageAmount); //Call this with the value of the thing on the scale. Sets the calibration factor based on the weight on scale and zero offset. Default averageAmount = 8
   void NAU7802_setCalibrationFactor(float calFactor);                                      //Pass a known calibration factor into library. Helpful if users is loading settings from NVM.
   float NAU7802_getCalibrationFactor();                                                    //Ask library for this value. Useful for storing value into NVM.
 
-  float NAU7802_getWeight(bool allowNegativeWeights = false, uint8_t samplesToTake = 8); //Once you've set zero offset and cal factor, you can ask the library to do the calculations for you.
+  float NAU7802_getWeight(bool allowNegativeWeights, uint8_t samplesToTake); //Once you've set zero offset and cal factor, you can ask the library to do the calculations for you. Default values: allowNegativeWeights = false samplesToTake = 8
 
   bool NAU7802_setGain(uint8_t gainValue);        //Set the gain. x1, 2, 4, 8, 16, 32, 64, 128 are available
   bool NAU7802_setLDO(uint8_t ldoValue);          //Set the onboard Low-Drop-Out voltage regulator to a given value. 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.2, 4.5V are avaialable
@@ -195,7 +195,7 @@ typedef enum
 
   bool NAU7802_calibrateAFE();                               //Synchronous calibration of the analog front end of the NAU7802. Returns true if CAL_ERR bit is 0 (no error)
   void NAU7802_beginCalibrateAFE();                          //Begin asynchronous calibration of the analog front end of the NAU7802. Poll for completion with calAFEStatus() or wait with waitForCalibrateAFE().
-  bool NAU7802_waitForCalibrateAFE(uint32_t timeout_ms = 0); //Wait for asynchronous AFE calibration to complete with optional timeout.
+  bool NAU7802_waitForCalibrateAFE(uint32_t timeout_ms); //Wait for asynchronous AFE calibration to complete with optional timeout. Default timeout_ms = 0
   NAU7802_Cal_Status NAU7802_calAFEStatus();                 //Check calibration status.
 
   bool NAU7802_reset(); //Resets all registers to Power Of Defaults
