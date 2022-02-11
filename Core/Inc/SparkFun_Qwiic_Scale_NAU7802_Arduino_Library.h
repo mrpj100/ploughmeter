@@ -29,6 +29,7 @@
 
 //#include "Arduino.h"
 //#include <Wire.h>
+#include <stdbool.h>
 
 #include "stm32l4xx_hal.h"
 
@@ -171,7 +172,7 @@ typedef enum
 
 // Public functions
 
-  bool NAU7802_begin(I2C_HandleTypeDef wirePort, bool reset); //Check communication and initialize sensor. Default value for reset = true
+  bool NAU7802_begin(I2C_HandleTypeDef * wirePort, bool initialize); //Check communication and initialize sensor. Default value for reset = true
   bool NAU7802_isConnected();                                      //Returns true if device acks at the I2C address
 
   bool NAU7802_available();                          //Returns true if Cycle Ready bit is set (conversion is complete)

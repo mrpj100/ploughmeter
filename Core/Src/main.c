@@ -1318,6 +1318,11 @@ PRES_DATA read_pressure_sensor(void){
 
 bool setup_load_cell_sensor(void) {
 
+	bool begin_ok = false;
+
+	begin_ok = NAU7802_begin(&hi2c2, true); // initialise sensor
+
+
 
 	return true;
 }

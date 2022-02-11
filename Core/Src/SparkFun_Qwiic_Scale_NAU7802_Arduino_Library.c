@@ -27,12 +27,13 @@
 
 #include "SparkFun_Qwiic_Scale_NAU7802_Arduino_Library.h"
 
+bad
 
 //Sets up the NAU7802 for basic function
 //If initialize is true (or not specified), default init and calibration is performed
 //If initialize is false, then it's up to the caller to initalize and calibrate
 //Returns true upon completion
-bool NAU7802_begin(TwoWire &wirePort, bool initialize)
+bool NAU7802_begin(I2C_HandleTypeDef * wirePort, bool initialize)
 {
   //Get user's options
   _i2cPort = &wirePort;
