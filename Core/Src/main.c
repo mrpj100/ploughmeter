@@ -268,11 +268,19 @@ int main(void)
   //Enable Sensor 3v3
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);
    HAL_Delay(1000);
+   	setup_load_cell_sensor();
+
+   	// temporary check of load cell
+   	int32_t load_cell_reading = 0;
+   	for(int count=0; count<10; count++) {
+   		load_cell_reading = NAU7802_getReading();
+   	}
+
 
     setup_tilt_sensor();
     setup_imu_sensor();
     setup_temperature_sensor();
-    setup_load_cell_sensor();
+
 
   //Enable Radio Modem
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
