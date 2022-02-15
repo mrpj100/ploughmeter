@@ -73,10 +73,26 @@ bool NAU7802_begin(I2C_HandleTypeDef * wirePort, bool initialize)
 //Tests for device ack to I2C address
 bool NAU7802_isConnected()
 {
+	HAL_StatusTypeDef status = HAL_BUSY;
+
+	uint32_t trials = 3; // number of tries to connect before we give up
+	uint32_t timeout = 1000; // number of millisconds to wait before we give up
+
+	status = HAL_I2C_IsDeviceReady(_NAU7802_i2cPort, _NAU7802_deviceAddress<<1, trials, timeout);
+
+	if (status != HAL_OK) {
+		return false;
+	} else {
+		return true;
+	}
+
+
+/*
   _i2cPort->beginTransmission(_deviceAddress);
   if (_i2cPort->endTransmission() != 0)
     return (false); //Sensor did not ACK
   return (true);    //All good
+  */
 }
 
 //Returns true if Cycle Ready bit is set (conversion is complete)
@@ -123,7 +139,8 @@ NAU7802_Cal_Status NAU7802_calAFEStatus()
 //Returns true if calibration completes succsfully, otherwise returns false.
 bool NAU7802_waitForCalibrateAFE(uint32_t timeout_ms)
 {
-  uint32_t begin = millis();
+ /*
+	uint32_t begin = millis();
   NAU7802_Cal_Status cal_ready;
 
   while ((cal_ready = NAU7802_calAFEStatus()) == NAU7802_CAL_IN_PROGRESS)
@@ -132,14 +149,16 @@ bool NAU7802_waitForCalibrateAFE(uint32_t timeout_ms)
     {
       break;
     }
-    delay(1);
+    HAL_delay(1);
   }
 
   if (cal_ready == NAU7802_CAL_SUCCESS)
   {
     return (true);
   }
+  */
   return (false);
+
 }
 
 //Set the readings per second
@@ -160,16 +179,16 @@ bool NAU7802_setSampleRate(uint8_t rate)
 bool NAU7802_setChannel(uint8_t channelNumber)
 {
   if (channelNumber == NAU7802_CHANNEL_1)
-    return (clearBit(NAU7802_CTRL2_CHS, NAU7802_CTRL2)); //Channel 1 (default)
+    return (NAU7802_clearBit(NAU7802_CTRL2_CHS, NAU7802_CTRL2)); //Channel 1 (default)
   else
-    return (setBit(NAU7802_CTRL2_CHS, NAU7802_CTRL2)); //Channel 2
+    return (NAU7802_setBit(NAU7802_CTRL2_CHS, NAU7802_CTRL2)); //Channel 2
 }
 
 //Power up digital and analog sections of scale
 bool NAU7802_powerUp()
 {
-  setBit(NAU7802_PU_CTRL_PUD, NAU7802_PU_CTRL);
-  setBit(NAU7802_PU_CTRL_PUA, NAU7802_PU_CTRL);
+  NAU7802_setBit(NAU7802_PU_CTRL_PUD, NAU7802_PU_CTRL);
+  NAU7802_setBit(NAU7802_PU_CTRL_PUA, NAU7802_PU_CTRL);
 
   //Wait for Power Up bit to be set - takes approximately 200us
   uint8_t counter = 0;
@@ -177,7 +196,7 @@ bool NAU7802_powerUp()
   {
     if (NAU7802_getBit(NAU7802_PU_CTRL_PUR, NAU7802_PU_CTRL) == true)
       break; //Good to go
-    delay(1);
+    HAL_Delay(1);
     if (counter++ > 100)
       return (false); //Error
   }
@@ -191,11 +210,11 @@ bool NAU7802_powerDown()
   return (NAU7802_clearBit(NAU7802_PU_CTRL_PUA, NAU7802_PU_CTRL));
 }
 
-//Resets all registers to Power Of Defaults
+//Resets all registers to Power Off Defaults
 bool NAU7802_reset()
 {
   NAU7802_setBit(NAU7802_PU_CTRL_RR, NAU7802_PU_CTRL); //Set RR
-  delay(1);
+  HAL_Delay(1);
   return (NAU7802_clearBit(NAU7802_PU_CTRL_RR, NAU7802_PU_CTRL)); //Clear RR to leave reset state
 }
 
@@ -240,6 +259,7 @@ uint8_t NAU7802_getRevisionCode()
 //Assumes CR Cycle Ready bit (ADC conversion complete) has been checked to be 1
 int32_t NAU7802_getReading()
 {
+	/*
   _i2cPort->beginTransmission(_deviceAddress);
   _i2cPort->write(NAU7802_ADCO_B2);
   if (_i2cPort->endTransmission() != 0)
@@ -265,8 +285,9 @@ int32_t NAU7802_getReading()
 
     return (value);
   }
-
+*/
   return (0); //Error
+
 }
 
 //Return the average of a given number of readings
@@ -274,7 +295,7 @@ int32_t NAU7802_getReading()
 int32_t NAU7802_getAverage(uint8_t averageAmount)
 {
   long total = 0;
-  uint8_t samplesAquired = 0;
+  /*uint8_t samplesAquired = 0;
 
   unsigned long startTime = millis();
   while (1)
@@ -287,10 +308,10 @@ int32_t NAU7802_getAverage(uint8_t averageAmount)
     }
     if (millis() - startTime > 1000)
       return (0); //Timeout - Bail with error
-    delay(1);
+    HAL_Delay(1);
   }
   total /= averageAmount;
-
+	*/
   return (total);
 }
 
@@ -334,7 +355,7 @@ float NAU7802_getCalibrationFactor()
 //Returns the y of y = mx + b using the current weight on scale, the cal factor, and the offset.
 float NAU7802_getWeight(bool allowNegativeWeights, uint8_t samplesToTake)
 {
-  int32_t onScale = getAverage(samplesToTake);
+  int32_t onScale = NAU7802_getAverage(samplesToTake);
 
   //Prevent the current reading from being less than zero offset
   //This happens when the scale is zero'd, unloaded, and the load cell reports a value slightly less than zero value
@@ -388,6 +409,30 @@ bool NAU7802_getBit(uint8_t bitNumber, uint8_t registerAddress)
 //Get contents of a register
 uint8_t NAU7802_getRegister(uint8_t registerAddress)
 {
+	HAL_StatusTypeDef status = HAL_BUSY;
+	uint32_t timeout = 1000; // number of ms to wait for a reply
+
+	uint8_t register_value = 0; // return value
+
+	// write to the NAU7802 with the register address
+	status = HAL_I2C_Master_Transmit(_NAU7802_i2cPort, _NAU7802_deviceAddress<<1, &registerAddress, 1, timeout); // send one byte, which is the register address
+
+	if (status != HAL_OK) {
+		return false; // give up if we couldn't transmit
+	}
+
+	// read back one byte
+	status = HAL_I2C_Master_Receive(_NAU7802_i2cPort, _NAU7802_deviceAddress<<1, &register_value, 1, timeout); // all registers are 1 byte
+
+	if (status != HAL_OK) {
+		return false; // again, give up if we lost comms
+	}
+
+	return register_value;
+
+
+
+	/*
   _i2cPort->beginTransmission(_deviceAddress);
   _i2cPort->write(registerAddress);
   if (_i2cPort->endTransmission() != 0)
@@ -397,18 +442,22 @@ uint8_t NAU7802_getRegister(uint8_t registerAddress)
 
   if (_i2cPort->available())
     return (_i2cPort->read());
-
+*/
   return (-1); //Error
+
 }
 
 //Send a given value to be written to given address
 //Return true if successful
 bool NAU7802_setRegister(uint8_t registerAddress, uint8_t value)
 {
+	/*
   _i2cPort->beginTransmission(_deviceAddress);
   _i2cPort->write(registerAddress);
   _i2cPort->write(value);
   if (_i2cPort->endTransmission() != 0)
     return (false); //Sensor did not ACK
   return (true);
+  */
+	return (false); // temporary
 }
