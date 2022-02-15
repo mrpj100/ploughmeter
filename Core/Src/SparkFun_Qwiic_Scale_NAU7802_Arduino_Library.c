@@ -442,15 +442,32 @@ uint8_t NAU7802_getRegister(uint8_t registerAddress)
 
   if (_i2cPort->available())
     return (_i2cPort->read());
-*/
-  return (-1); //Error
 
+  return (-1); //Error
+*/
 }
 
 //Send a given value to be written to given address
 //Return true if successful
 bool NAU7802_setRegister(uint8_t registerAddress, uint8_t value)
 {
+	HAL_StatusTypeDef status = HAL_BUSY;
+	uint32_t timeout = 1000; // number of ms to wait for a reply
+
+	uint8_t data_buffer[2]; // two bytes to send
+
+	data_buffer[0] = registerAddress;
+	data_buffer[1] = value;
+
+	status = HAL_I2C_Master_Transmit(_NAU7802_i2cPort, _NAU7802_deviceAddress<<1, data_buffer, sizeof(data_buffer), timeout);
+
+	if (status != HAL_OK) {
+		return false;
+	} else {
+		return true;
+	}
+
+
 	/*
   _i2cPort->beginTransmission(_deviceAddress);
   _i2cPort->write(registerAddress);
@@ -459,5 +476,5 @@ bool NAU7802_setRegister(uint8_t registerAddress, uint8_t value)
     return (false); //Sensor did not ACK
   return (true);
   */
-	return (false); // temporary
+
 }
