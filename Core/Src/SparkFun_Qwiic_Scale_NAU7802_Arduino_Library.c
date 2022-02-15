@@ -140,12 +140,12 @@ NAU7802_Cal_Status NAU7802_calAFEStatus()
 bool NAU7802_waitForCalibrateAFE(uint32_t timeout_ms)
 {
  /*
-	uint32_t begin = millis();
+	uint32_t begin = HAL_GetTick();
   NAU7802_Cal_Status cal_ready;
 
   while ((cal_ready = NAU7802_calAFEStatus()) == NAU7802_CAL_IN_PROGRESS)
   {
-    if ((timeout_ms > 0) && ((millis() - begin) > timeout_ms))
+    if ((timeout_ms > 0) && ((HAL_GetTick() - begin) > timeout_ms))
     {
       break;
     }
@@ -295,23 +295,23 @@ int32_t NAU7802_getReading()
 int32_t NAU7802_getAverage(uint8_t averageAmount)
 {
   long total = 0;
-  /*uint8_t samplesAquired = 0;
+  uint8_t samplesAquired = 0;
 
-  unsigned long startTime = millis();
+  unsigned long startTime = HAL_GetTick();
   while (1)
   {
-    if (available() == true)
+    if (NAU7802_available() == true)
     {
       total += NAU7802_getReading();
       if (++samplesAquired == averageAmount)
         break; //All done
     }
-    if (millis() - startTime > 1000)
+    if (HAL_GetTick() - startTime > 1000)
       return (0); //Timeout - Bail with error
     HAL_Delay(1);
   }
   total /= averageAmount;
-	*/
+
   return (total);
 }
 
