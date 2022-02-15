@@ -256,9 +256,49 @@ uint8_t NAU7802_getRevisionCode()
 }
 
 //Returns 24-bit reading
-//Assumes CR Cycle Ready bit (ADC conversion complete) has been checked to be 1
+//Assumes CR Cycle Ready bit (ADC conversion complete) has been checked to be 1 - which can be done with NAU7802_available()
 int32_t NAU7802_getReading()
 {
+	HAL_StatusTypeDef status = HAL_BUSY;
+	uint32_t timeout = 1000; // number of ms to wait for a reply
+
+	uint8_t ADC_result_buffer[3]; // 3-byte temporary buffer
+
+	// ask the NAU7802 for the ADC result
+	// first we write the address and register value
+	uint8_t registerAddress = NAU7802_ADCO_B2;
+
+	status = HAL_I2C_Master_Transmit(_NAU7802_i2cPort, _NAU7802_deviceAddress<<1, &registerAddress, 1, timeout); // send one byte, which is the register address
+
+	if (status != HAL_OK) {
+		return 0; // give up if we couldn't transmit
+	}
+
+	// then we read back the three result bytes (the NAU7802 automatically sends the subsequent bytes in the register map if we keep reading)
+	status = HAL_I2C_Master_Receive(_NAU7802_i2cPort, _NAU7802_deviceAddress<<1, ADC_result_buffer, sizeof(ADC_result_buffer), timeout);
+
+	if (status != HAL_OK) {
+		return 0; // again, give up if we lost comms
+	}
+
+	// now we reassemble those three bytes into a 24-bit number and perform an unsigned-to-signed conversion
+	uint32_t valueRaw = (uint32_t)ADC_result_buffer[0] << 16; //MSB
+	valueRaw |= (uint32_t)ADC_result_buffer[1] << 8;          //MidSB
+	valueRaw |= (uint32_t)ADC_result_buffer[2];               //LSB
+
+	// the raw value coming from the ADC is a 24-bit number, so the sign bit now
+	// resides on bit 23 (0 is LSB) of the uint32_t container. By shifting the
+	// value to the left, I move the sign bit to the MSB of the uint32_t container.
+	// By casting to a signed int32_t container I now have properly recovered
+	// the sign of the original value
+	int32_t valueShifted = (int32_t)(valueRaw << 8);
+
+	// shift the number back right to recover its intended magnitude
+	int32_t value = (valueShifted >> 8);
+
+	return (value);
+
+
 	/*
   _i2cPort->beginTransmission(_deviceAddress);
   _i2cPort->write(NAU7802_ADCO_B2);
