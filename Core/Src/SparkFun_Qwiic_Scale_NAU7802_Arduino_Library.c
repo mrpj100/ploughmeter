@@ -139,8 +139,8 @@ NAU7802_Cal_Status NAU7802_calAFEStatus()
 //Returns true if calibration completes succsfully, otherwise returns false.
 bool NAU7802_waitForCalibrateAFE(uint32_t timeout_ms)
 {
- /*
-	uint32_t begin = HAL_GetTick();
+
+  uint32_t begin = HAL_GetTick();
   NAU7802_Cal_Status cal_ready;
 
   while ((cal_ready = NAU7802_calAFEStatus()) == NAU7802_CAL_IN_PROGRESS)
@@ -149,14 +149,14 @@ bool NAU7802_waitForCalibrateAFE(uint32_t timeout_ms)
     {
       break;
     }
-    HAL_delay(1);
+    HAL_Delay(1);
   }
 
   if (cal_ready == NAU7802_CAL_SUCCESS)
   {
     return (true);
   }
-  */
+
   return (false);
 
 }
