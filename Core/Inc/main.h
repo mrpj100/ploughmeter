@@ -32,7 +32,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "SparkFun_Qwiic_Scale_NAU7802_Arduino_library.h"
 
 /* USER CODE END Includes */
 
