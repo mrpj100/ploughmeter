@@ -270,18 +270,6 @@ int main(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);
    HAL_Delay(1000);
    	setup_load_cell_sensor();
-
-   	// temporary check of load cell
-   	int32_t load_cell_reading = 0;
-   	uint8_t load_cell_three_bytes[3];
-   	for(int count=0; count<10; count++) {
-   		load_cell_reading = NAU7802_getReading();
-
-   		convert_int32_t_to_three_bytes(load_cell_reading, load_cell_three_bytes);
-
-   	}
-
-
     setup_tilt_sensor();
     setup_imu_sensor();
     setup_temperature_sensor();
@@ -1379,9 +1367,23 @@ bool assemble_and_send_packet(void){
 
 	//pres_data = read_pressure_sensor();
 
-	uint8_t packet[24];
+	int32_t load_cell_ch1_result = 0;
+	int32_t load_cell_ch2_result = 0;
 
-	packet[0] = 23; // number of bytes to follow
+	// #TODO set channel 1 here later
+	load_cell_ch1_result = NAU7802_getReading();
+	// #TODO set channel 2 here later
+	load_cell_ch2_result = NAU7802_getReading();
+
+	uint8_t load_cell_ch1_bytes[3];
+	uint8_t load_cell_ch2_bytes[3];
+
+	convert_int32_t_to_three_bytes(load_cell_ch1_result, load_cell_ch1_bytes);
+	convert_int32_t_to_three_bytes(load_cell_ch2_result, load_cell_ch2_bytes);
+
+	uint8_t packet[30];
+
+	packet[0] = 29; // number of bytes to follow
 	packet[1] = CI_Byte;
 
 	/*TEMPERATURE PACKET*/
@@ -1431,6 +1433,15 @@ bool assemble_and_send_packet(void){
 	/*Pressure PACKET*/
 	packet[22] = pres_data.pressure_result >> 8;
 	packet[23] = pres_data.pressure_result & 0x00FF;
+
+	/*Load cell*/
+	packet[24] = load_cell_ch1_bytes[0];
+	packet[25] = load_cell_ch1_bytes[1];
+	packet[26] = load_cell_ch1_bytes[2];
+	packet[27] = load_cell_ch2_bytes[0];
+	packet[28] = load_cell_ch2_bytes[1];
+	packet[29] = load_cell_ch2_bytes[2];
+
 
 	radio_ret = HAL_UART_Transmit(&huart2, packet, packet[0] + 1, 100);
 
