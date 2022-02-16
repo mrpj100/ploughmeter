@@ -53,7 +53,7 @@ bool NAU7802_begin(I2C_HandleTypeDef * wirePort, bool initialize)
 
     result &= NAU7802_powerUp(); //Power on analog and digital sections of the scale
 
-    result &= NAU7802_setLDO(NAU7802_LDO_3V3); //Set LDO to 3.3V
+    result &= NAU7802_setLDO(NAU7802_LDO_3V0); //Set LDO to 3.0V - John recommended this in case the battery voltage sags
 
     result &= NAU7802_setGain(NAU7802_GAIN_128); //Set gain to 128
 
@@ -61,7 +61,7 @@ bool NAU7802_begin(I2C_HandleTypeDef * wirePort, bool initialize)
 
     result &= NAU7802_setRegister(NAU7802_ADC, 0x30); //Turn off CLK_CHP. From 9.1 power on sequencing.
 
-    result &= NAU7802_setBit(NAU7802_PGA_PWR_PGA_CAP_EN, NAU7802_PGA_PWR); //Enable 330pF decoupling cap on chan 2. From 9.14 application circuit note.
+    result &= NAU7802_clearBit(NAU7802_PGA_PWR_PGA_CAP_EN, NAU7802_PGA_PWR); //Disables 330pF decoupling cap on chan 2 - we must cut the CAP trace on the bottom of the board as we're using channel 2
 
     result &= NAU7802_calibrateAFE(); //Re-cal analog front end when we change gain, sample rate, or channel
   }
