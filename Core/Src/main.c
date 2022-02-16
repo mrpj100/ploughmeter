@@ -1119,25 +1119,25 @@ IMU_DATA read_imu_sensor(void){
 
 	//BigEndian
 	cmd_buf[0] = MPU9250_GYRO_XOUT_H;
-	HAL_imu_ret = HAL_I2C_Master_Transmit(&hi2c1, MPU9250_ADDR, cmd_buf, 1, MPU9250_I2C_DELAY);
-	HAL_imu_ret = HAL_I2C_Master_Receive(&hi2c1, MPU9250_ADDR, rec_buf, 2, MPU9250_I2C_DELAY);
+	HAL_imu_ret = HAL_I2C_Master_Transmit(&hi2c3, MPU9250_ADDR, cmd_buf, 1, MPU9250_I2C_DELAY);
+	HAL_imu_ret = HAL_I2C_Master_Receive(&hi2c3, MPU9250_ADDR, rec_buf, 2, MPU9250_I2C_DELAY);
 	gyro_read_x = (rec_buf[0] << 8) | rec_buf[1];
 
 	cmd_buf[0] = MPU9250_GYRO_YOUT_H;
-	HAL_imu_ret = HAL_I2C_Master_Transmit(&hi2c1, MPU9250_ADDR, cmd_buf, 1, MPU9250_I2C_DELAY);
-	HAL_imu_ret = HAL_I2C_Master_Receive(&hi2c1, MPU9250_ADDR, rec_buf, 2, MPU9250_I2C_DELAY);
+	HAL_imu_ret = HAL_I2C_Master_Transmit(&hi2c3, MPU9250_ADDR, cmd_buf, 1, MPU9250_I2C_DELAY);
+	HAL_imu_ret = HAL_I2C_Master_Receive(&hi2c3, MPU9250_ADDR, rec_buf, 2, MPU9250_I2C_DELAY);
 	gyro_read_y = (rec_buf[0] << 8) | rec_buf[1];
 
 	cmd_buf[0] = MPU9250_GYRO_ZOUT_H;
-	HAL_imu_ret = HAL_I2C_Master_Transmit(&hi2c1, MPU9250_ADDR, cmd_buf, 1, MPU9250_I2C_DELAY);
-	HAL_imu_ret = HAL_I2C_Master_Receive(&hi2c1, MPU9250_ADDR, rec_buf, 2, MPU9250_I2C_DELAY);
+	HAL_imu_ret = HAL_I2C_Master_Transmit(&hi2c3, MPU9250_ADDR, cmd_buf, 1, MPU9250_I2C_DELAY);
+	HAL_imu_ret = HAL_I2C_Master_Receive(&hi2c3, MPU9250_ADDR, rec_buf, 2, MPU9250_I2C_DELAY);
 	gyro_read_z = (rec_buf[0] << 8) | rec_buf[1];
 
 	data.gyro_x = gyro_read_x;
 	data.gyro_y = gyro_read_y;
 	data.gyro_z = gyro_read_z;
-	*/
 
+	*/
 	/*GYROSCOPE DATA REGISTER READS ---- END*/
 
 	/*ACCELEROMETER DATA REGISTER READS ---- START*/
@@ -1151,18 +1151,18 @@ IMU_DATA read_imu_sensor(void){
 	int16_t accel_read_z = 0;
 
 	cmd_buf[0] = MPU9250_ACCEL_XOUT_H;
-	HAL_imu_ret = HAL_I2C_Master_Transmit(&hi2c1, MPU9250_ADDR, cmd_buf, 1, MPU9250_I2C_DELAY);
-	HAL_imu_ret = HAL_I2C_Master_Receive(&hi2c1, MPU9250_ADDR, rec_buf, 2, MPU9250_I2C_DELAY);
+	HAL_imu_ret = HAL_I2C_Master_Transmit(&hi2c3, MPU9250_ADDR, cmd_buf, 1, MPU9250_I2C_DELAY);
+	HAL_imu_ret = HAL_I2C_Master_Receive(&hi2c3, MPU9250_ADDR, rec_buf, 2, MPU9250_I2C_DELAY);
 	accel_read_x = (rec_buf[0] << 8) | rec_buf[1];
 
 	cmd_buf[0] = MPU9250_ACCEL_YOUT_H;
-	HAL_imu_ret = HAL_I2C_Master_Transmit(&hi2c1, MPU9250_ADDR, cmd_buf, 1, MPU9250_I2C_DELAY);
-	HAL_imu_ret = HAL_I2C_Master_Receive(&hi2c1, MPU9250_ADDR, rec_buf, 2, MPU9250_I2C_DELAY);
+	HAL_imu_ret = HAL_I2C_Master_Transmit(&hi2c3, MPU9250_ADDR, cmd_buf, 1, MPU9250_I2C_DELAY);
+	HAL_imu_ret = HAL_I2C_Master_Receive(&hi2c3, MPU9250_ADDR, rec_buf, 2, MPU9250_I2C_DELAY);
 	accel_read_y = (rec_buf[0] << 8) | rec_buf[1];
 
 	cmd_buf[0] = MPU9250_ACCEL_ZOUT_H;
-	HAL_imu_ret = HAL_I2C_Master_Transmit(&hi2c1, MPU9250_ADDR, cmd_buf, 1, MPU9250_I2C_DELAY);
-	HAL_imu_ret = HAL_I2C_Master_Receive(&hi2c1, MPU9250_ADDR, rec_buf, 2, MPU9250_I2C_DELAY);
+	HAL_imu_ret = HAL_I2C_Master_Transmit(&hi2c3, MPU9250_ADDR, cmd_buf, 1, MPU9250_I2C_DELAY);
+	HAL_imu_ret = HAL_I2C_Master_Receive(&hi2c3, MPU9250_ADDR, rec_buf, 2, MPU9250_I2C_DELAY);
 	accel_read_z = (rec_buf[0] << 8) | rec_buf[1];
 
 	data.accel_x = accel_read_x;
@@ -1358,7 +1358,7 @@ bool assemble_and_send_packet(void){
 
 	uint8_t packet[24];
 
-	packet[0] = 23;
+	packet[0] = 23; // number of bytes to follow
 	packet[1] = CI_Byte;
 
 	/*TEMPERATURE PACKET*/
