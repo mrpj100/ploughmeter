@@ -188,6 +188,7 @@ bool setup_load_cell_sensor(void);
 TILT_DATA read_tilt_sensor(void);
 COND_DATA read_conductivity_sensor(void);
 PRES_DATA read_pressure_sensor(void);
+void convert_int32_t_to_three_bytes(int32_t input_value, uint8_t * output_array);
 bool assemble_and_send_packet(void);
 /* USER CODE END PFP */
 
@@ -272,8 +273,12 @@ int main(void)
 
    	// temporary check of load cell
    	int32_t load_cell_reading = 0;
+   	uint8_t load_cell_three_bytes[3];
    	for(int count=0; count<10; count++) {
    		load_cell_reading = NAU7802_getReading();
+
+   		convert_int32_t_to_three_bytes(load_cell_reading, load_cell_three_bytes);
+
    	}
 
 
@@ -1333,6 +1338,24 @@ bool setup_load_cell_sensor(void) {
 
 
 	return true;
+}
+
+
+// function to turn load cell readings into three bytes rather than four
+// we're taking a 32 bit signed value and making a 24 bit signed value but represented as three unsigned bytes
+// output_arrray a pointer to a 3-byte array of uint8_t
+void convert_int32_t_to_three_bytes(int32_t input_value, uint8_t * output_array) {
+
+	*output_array = 0; // MSB
+	*(output_array + 1) = 0; // middle byte
+	*(output_array + 2) = 0; // LSB
+
+	*output_array = (uint8_t)((uint32_t)(input_value & 0xFF0000) >> 16); // MSB magnitude
+	*output_array = (*output_array) | ((uint32_t)(input_value & 0x8000000) >> 24); // MSB sign
+	*(output_array + 1) = (uint8_t)((uint32_t)(input_value & 0xFF00) >> 8); // middle byte
+	*(output_array + 2) = (uint8_t)(input_value & 0xFF); // LSB
+
+	return;
 }
 
 
