@@ -154,6 +154,7 @@ bool NAU7802_waitForCalibrateAFE(uint32_t timeout_ms)
 
   if (cal_ready == NAU7802_CAL_SUCCESS)
   {
+	HAL_Delay(50); // extra 50ms delay added here because without it we get erroneous readings
     return (true);
   }
 

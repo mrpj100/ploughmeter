@@ -1370,11 +1370,11 @@ bool assemble_and_send_packet(void){
 	int32_t load_cell_ch1_result = 0;
 	int32_t load_cell_ch2_result = 0;
 
-	// #TODO set channel 1 here later
-	NAU7802_setChannel(NAU7802_CHANNEL_1);
+	NAU7802_setChannel(NAU7802_CHANNEL_1); // make sure we have Channel 1 selected
 	NAU7802_calibrateAFE(); // recalibrate after channel change
+
 	load_cell_ch1_result = NAU7802_getReading();
-	// #TODO set channel 2 here later
+	// change to channel 2
 	NAU7802_setChannel(NAU7802_CHANNEL_2);
 	NAU7802_calibrateAFE(); // recalibrate after channel change
 	load_cell_ch2_result = NAU7802_getReading();
