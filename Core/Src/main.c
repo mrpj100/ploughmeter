@@ -197,6 +197,7 @@ TILT_DATA read_tilt_sensor(void);
 COND_DATA read_conductivity_sensor(void);
 bool setup_pressure_sensor(void);
 PRES_DATA read_pressure_sensor(void);
+uint16_t read_battery_voltage();
 void convert_int32_t_to_three_bytes(int32_t input_value, uint8_t * output_array);
 bool assemble_and_send_packet(void);
 /* USER CODE END PFP */
@@ -1282,6 +1283,20 @@ COND_DATA read_conductivity_sensor(void){
 
 	data.result = 0;
 
+	// configure ADC to the correct channel
+	ADC_ChannelConfTypeDef sConfig = {0};
+
+	sConfig.Channel = ADC_CHANNEL_5;
+	sConfig.Rank = ADC_REGULAR_RANK_1;
+	sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+	sConfig.SingleDiff = ADC_SINGLE_ENDED;
+	sConfig.OffsetNumber = ADC_OFFSET_NONE;
+	sConfig.Offset = 0;
+	if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+	{
+		Error_Handler();
+	}
+
 	//Turn on PWM square waves
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
@@ -1389,6 +1404,45 @@ void convert_int32_t_to_three_bytes(int32_t input_value, uint8_t * output_array)
 	return;
 }
 
+// function to read battery voltage using internal voltage reference on ADC
+uint16_t read_battery_voltage() {
+
+	uint16_t battery_millivolts = 0; // return value is in integer mV, so 3.6V = 3600
+	uint16_t vref_adc_val = 0; // this is the measurement of VREF from the ADC
+
+	ADC_ChannelConfTypeDef sConfig = {0};
+	// reconfigure the ADC to read the internal voltage reference
+	sConfig.Channel = ADC_CHANNEL_VREFINT;
+	sConfig.Rank = ADC_REGULAR_RANK_1;
+	sConfig.SamplingTime = ADC_SAMPLETIME_640CYCLES_5;
+	if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+	{
+		Error_Handler();
+	}
+
+	// start ADC conversion
+	HAL_ADC_Start(&hadc1);
+
+	// poll ADC until conversion completes - note that we should check for the success of the conversion here really
+	HAL_ADC_PollForConversion(&hadc1, ADC_POLL_TIMEOUT);
+
+	// get result
+	vref_adc_val = HAL_ADC_GetValue(&hadc1);
+
+	// switch off ADC
+	HAL_ADC_Stop(&hadc1);
+
+	// convert the ADC value to the supply voltage (VDDA/VREF+), which on Cryowurst is the raw battery voltage
+	// we use this handy macro from the HAL
+
+	battery_millivolts = __HAL_ADC_CALC_VREFANALOG_VOLTAGE ( vref_adc_val,  ADC_RESOLUTION_12B );
+
+
+
+
+	return battery_millivolts;
+}
+
 
 /**
   * @brief Assemble and send packet Function
@@ -1413,6 +1467,8 @@ bool assemble_and_send_packet(void){
 	if (pressure_sensor_connected == true) {
 		pres_data = read_pressure_sensor();
 	}
+	uint16_t battery_voltage;
+	battery_voltage = read_battery_voltage();
 
 	int32_t load_cell_ch1_result = 0;
 	int32_t load_cell_ch2_result = 0;
@@ -1436,9 +1492,9 @@ bool assemble_and_send_packet(void){
 
 
 
-	uint8_t packet[30];
+	uint8_t packet[32];
 
-	packet[0] = 29; // number of bytes to follow
+	packet[0] = sizeof(packet)-1; // number of bytes to follow
 	packet[1] = CI_Byte;
 
 	/*TEMPERATURE PACKET*/
@@ -1497,6 +1553,9 @@ bool assemble_and_send_packet(void){
 	packet[28] = load_cell_ch2_bytes[1];
 	packet[29] = load_cell_ch2_bytes[2];
 
+	/* battery voltage */
+	packet[30] = battery_voltage >> 8;
+	packet[31] = battery_voltage & 0x00FF;
 
 	radio_ret = HAL_UART_Transmit(&huart2, packet, packet[0] + 1, 100);
 
