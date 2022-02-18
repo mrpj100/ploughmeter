@@ -160,12 +160,20 @@ TIM_HandleTypeDef htim1;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
+
+
 /* USER CODE BEGIN PV */
 bool flag = false;
 static const uint8_t TMP117_ADDR = (0x48 << 1);
 static const uint8_t ICM20948_ADDR = (0x68 << 1);
 static const uint8_t AK09916_ADDR = (0x0C << 1);
 static const uint8_t PRESSURE_ADDR = (0x40 << 1);
+
+bool load_cell_connected = false;
+bool pressure_sensor_connected = false;
+bool tilt_sensor_connected = false;
+bool imu_connected = false;
+bool temperature_sensor_connected = false;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -187,6 +195,7 @@ bool setup_tilt_sensor(void);
 bool setup_load_cell_sensor(void);
 TILT_DATA read_tilt_sensor(void);
 COND_DATA read_conductivity_sensor(void);
+bool setup_pressure_sensor(void);
 PRES_DATA read_pressure_sensor(void);
 void convert_int32_t_to_three_bytes(int32_t input_value, uint8_t * output_array);
 bool assemble_and_send_packet(void);
@@ -198,6 +207,7 @@ uint8_t TILT_RX_BUF[50];
 char TILT_RX_DATA[50];
 int TILT_RX_DATA_INDEX = 0;
 volatile bool TILT_RX_FLAG = false;
+volatile bool TILT_ERROR_FLAG = false;
 uint8_t TILT_CHKSUM = 0;
 char TILT_CHKSUM_RETREIVED[2];
 
@@ -269,10 +279,12 @@ int main(void)
   //Enable Sensor 3v3
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);
    HAL_Delay(1000);
-   	setup_load_cell_sensor();
-    setup_tilt_sensor();
-    setup_imu_sensor();
-    setup_temperature_sensor();
+
+   load_cell_connected = setup_load_cell_sensor(); // returns true on success
+   tilt_sensor_connected = setup_tilt_sensor();
+   imu_connected = setup_imu_sensor();
+   temperature_sensor_connected = setup_temperature_sensor();
+   pressure_sensor_connected = setup_pressure_sensor();
 
 
   //Enable Radio Modem
@@ -787,6 +799,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
 	{
 		//if error set rx flag to true to exit while loop
 		TILT_RX_FLAG = true;
+		TILT_ERROR_FLAG = true;
 	}
 }
 
@@ -1190,6 +1203,16 @@ bool setup_tilt_sensor(void){
 	//this will clear overrun flag so that uart can be used to receive valid data during read sequence
 	__HAL_UART_CLEAR_FLAG(&huart1, UART_CLEAR_OREF);
 
+	// try and read data from the sensor
+	// if the sensor is not connected, HAL_UART_ErrorCallback will set TILT_ERROR_FLAG to be true
+	// reading the sensor here also ensures that the data is fresh.
+
+	read_tilt_sensor();
+
+	if (TILT_ERROR_FLAG == true) {
+		return false; // we have a comms error
+	}
+
 	if(ret_status == HAL_OK){
 		return true;
 	}
@@ -1282,6 +1305,26 @@ COND_DATA read_conductivity_sensor(void){
 
 	return data;
 }
+
+bool setup_pressure_sensor(void) {
+
+	HAL_StatusTypeDef status = HAL_BUSY;
+
+	uint32_t trials = 2; // number of tries to connect before we give up
+	uint32_t timeout = 100; // number of millisconds to wait before we give up
+
+	status = HAL_I2C_IsDeviceReady(&hi2c2, PRESSURE_ADDR, trials, timeout);
+
+	if (status != HAL_OK) {
+		return false;
+	} else {
+		return true;
+	}
+
+	return false;
+}
+
+
 /**
   * @brief Read Pressure Sensor Function
   * @note	Function used to read raw keller pressure sensor values.
@@ -1297,11 +1340,11 @@ PRES_DATA read_pressure_sensor(void){
 	uint8_t pressure_received_bytes[3]; // array to store 5 received bytes from sensor
 	bool pressure_okay = false;
 	// send conversion request
-//	HAL_I2C_Master_Transmit(&hi2c1, PRESSURE_ADDR, &command_byte, sizeof(command_byte), 500 ); // 500ms timeout
+	HAL_I2C_Master_Transmit(&hi2c2, PRESSURE_ADDR, &command_byte, sizeof(command_byte), 500 ); // 500ms timeout
 	// wait 10ms - 8ms minimum required for result to be ready
 	HAL_Delay(10);
 	// read back results
-//	HAL_I2C_Master_Receive(&hi2c1, PRESSURE_ADDR, pressure_received_bytes, sizeof(pressure_received_bytes), 500); // 500ms timeout
+	HAL_I2C_Master_Receive(&hi2c2, PRESSURE_ADDR, pressure_received_bytes, sizeof(pressure_received_bytes), 500); // 500ms timeout
 	// check pressure reading was okay - status byte should be 0x40 if everything is operating normally
 	if (pressure_received_bytes[0] == 0x40) {
 		pressure_okay = true;
@@ -1325,7 +1368,7 @@ bool setup_load_cell_sensor(void) {
 
 
 
-	return true;
+	return begin_ok;
 }
 
 
@@ -1361,29 +1404,37 @@ bool assemble_and_send_packet(void){
 
 	imu_data = read_imu_sensor();
 
-	tilt_data = read_tilt_sensor();
+	if (tilt_sensor_connected) {
+		tilt_data = read_tilt_sensor();
+	}
 
 	cond_data = read_conductivity_sensor();
 
-	//pres_data = read_pressure_sensor();
+	if (pressure_sensor_connected == true) {
+		pres_data = read_pressure_sensor();
+	}
 
 	int32_t load_cell_ch1_result = 0;
 	int32_t load_cell_ch2_result = 0;
 
-	NAU7802_setChannel(NAU7802_CHANNEL_1); // make sure we have Channel 1 selected
-	NAU7802_calibrateAFE(); // recalibrate after channel change
+	if (load_cell_connected == true) {
+		NAU7802_setChannel(NAU7802_CHANNEL_1); // make sure we have Channel 1 selected
+		NAU7802_calibrateAFE(); // recalibrate after channel change
 
-	load_cell_ch1_result = NAU7802_getReading();
-	// change to channel 2
-	NAU7802_setChannel(NAU7802_CHANNEL_2);
-	NAU7802_calibrateAFE(); // recalibrate after channel change
-	load_cell_ch2_result = NAU7802_getReading();
+		load_cell_ch1_result = NAU7802_getReading();
+		// change to channel 2
+		NAU7802_setChannel(NAU7802_CHANNEL_2);
+		NAU7802_calibrateAFE(); // recalibrate after channel change
+		load_cell_ch2_result = NAU7802_getReading();
+	}
 
 	uint8_t load_cell_ch1_bytes[3];
 	uint8_t load_cell_ch2_bytes[3];
 
 	convert_int32_t_to_three_bytes(load_cell_ch1_result, load_cell_ch1_bytes);
 	convert_int32_t_to_three_bytes(load_cell_ch2_result, load_cell_ch2_bytes);
+
+
 
 	uint8_t packet[30];
 
