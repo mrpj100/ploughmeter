@@ -1490,9 +1490,13 @@ bool assemble_and_send_packet(void){
 	convert_int32_t_to_three_bytes(load_cell_ch1_result, load_cell_ch1_bytes);
 	convert_int32_t_to_three_bytes(load_cell_ch2_result, load_cell_ch2_bytes);
 
+	// sequence number
 
+	HAL_PWR_EnableBkUpAccess(); // enable access to the Backup Registers
+	uint8_t sequence_number;
+	sequence_number = HAL_RTCEx_BKUPRead(&hrtc, 2); // read Backup Register 2
 
-	uint8_t packet[32];
+	uint8_t packet[33];
 
 	packet[0] = sizeof(packet)-1; // number of bytes to follow
 	packet[1] = CI_Byte;
@@ -1557,7 +1561,20 @@ bool assemble_and_send_packet(void){
 	packet[30] = battery_voltage >> 8;
 	packet[31] = battery_voltage & 0x00FF;
 
+	/* sequence number */
+	packet[32] = sequence_number;
+
 	radio_ret = HAL_UART_Transmit(&huart2, packet, packet[0] + 1, 100);
+
+	// increment sequence number and write back to Backup Register
+	if (sequence_number == 255) {
+		sequence_number = 0; // reset back to zero if we're at the top
+	} else {
+		sequence_number++; // otherwise increment
+	}
+
+	 HAL_RTCEx_BKUPWrite(&hrtc, 2, sequence_number); // write the sequence number to Backup Register 2
+
 
 	if(radio_ret == HAL_OK){
 		return true;
