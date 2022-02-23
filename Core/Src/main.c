@@ -282,7 +282,8 @@ int main(void)
    HAL_Delay(1000);
 
    load_cell_connected = setup_load_cell_sensor(); // returns true on success
-   tilt_sensor_connected = setup_tilt_sensor();
+   //tilt_sensor_connected = setup_tilt_sensor();
+   tilt_sensor_connected = false; // temporary removal of tilt sensor function as we're not using it and it seems to sometimes cause the micro to hang.
    imu_connected = setup_imu_sensor();
    temperature_sensor_connected = setup_temperature_sensor();
    pressure_sensor_connected = setup_pressure_sensor();
