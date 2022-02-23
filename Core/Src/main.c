@@ -279,7 +279,7 @@ int main(void)
 
   //Enable Sensor 3v3
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);
-   HAL_Delay(1000);
+   HAL_Delay(100);
 
    load_cell_connected = setup_load_cell_sensor(); // returns true on success
    //tilt_sensor_connected = setup_tilt_sensor();
@@ -291,17 +291,17 @@ int main(void)
 
   //Enable Radio Modem
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
-  HAL_Delay(2000);
+  HAL_Delay(400);
   assemble_and_send_packet();
   //turn on led
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
 
-  HAL_Delay(3000);
+  HAL_Delay(500);
   //Disable Sensor 3v3
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_RESET);
   //Disable Radio Modem
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
-  HAL_Delay(2000);
+  //HAL_Delay(2000);
 
   // set sleep period
   // this varies depending on whether we are in "deployment mode" (after a power-on or hardware reset) or in "long-term mode"
@@ -311,11 +311,11 @@ int main(void)
   uint32_t deployment_packet_count;
 
   uint32_t sleep_time;
-  // note that it takes N seconds to wake up and produce a packet, so all sleep times need to be shortened by Ns.
-  #define DEPLOYMENT_PACKET_SLEEP 2 // sleep for 2 seconds between deployment packets (giving a packet every Ys)
+  // note that it takes 4 seconds to wake up and produce a packet, so all sleep times need to be shortened by 4s.
+  #define DEPLOYMENT_PACKET_SLEEP 6 // sleep for 6 seconds between deployment packets (giving a packet every 10s)
   #define DEPLOYMENT_PACKET_TOTAL_COUNT 10 // 10 deployment packets before we go to long-term mode (just for testing)
 
-  #define LONG_TERM_SLEEP 60 // 60 seconds = 1 minute for testing
+  #define LONG_TERM_SLEEP 56 // 56 seconds sleep + 4s = 1 packet per minute for testing
 
   // read values from RTC backup registers
   HAL_PWR_EnableBkUpAccess(); // enable access to the Backup Registers
