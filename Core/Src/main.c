@@ -302,9 +302,45 @@ int main(void)
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
   HAL_Delay(2000);
 
+  // set sleep period
+  // this varies depending on whether we are in "deployment mode" (after a power-on or hardware reset) or in "long-term mode"
+
+  // RTC backup register 0 counts out our initial "deployment" packets at a high sample rate
+
+  uint32_t deployment_packet_count;
+
+  uint32_t sleep_time;
+  // note that it takes N seconds to wake up and produce a packet, so all sleep times need to be shortened by Ns.
+  #define DEPLOYMENT_PACKET_SLEEP 2 // sleep for 2 seconds between deployment packets (giving a packet every Ys)
+  #define DEPLOYMENT_PACKET_TOTAL_COUNT 10 // 10 deployment packets before we go to long-term mode (just for testing)
+
+  #define LONG_TERM_SLEEP 60 // 60 seconds = 1 minute for testing
+
+  // read values from RTC backup registers
+  HAL_PWR_EnableBkUpAccess(); // enable access to the Backup Registers
+
+  deployment_packet_count = HAL_RTCEx_BKUPRead(&hrtc, 0); // get the number of deployment packets transmitted so far
+
+  if (deployment_packet_count < DEPLOYMENT_PACKET_TOTAL_COUNT ) {
+
+	  // we're still in deployment mode
+	  deployment_packet_count++;
+	  sleep_time = DEPLOYMENT_PACKET_SLEEP;
+
+  } else {
+
+	  // we're in long-term mode
+	  sleep_time = LONG_TERM_SLEEP;
+  }
+
+  // write back the deployment packet count to the backup register
+  HAL_RTCEx_BKUPWrite(&hrtc, 0, deployment_packet_count);
+
+
+
   HAL_StatusTypeDef rtc_ret;
   // configure wakeup timer - set the clock to count in seconds, 0x3C seconds = 60 seconds
-  rtc_ret = HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 0x00005, RTC_WAKEUPCLOCK_CK_SPRE_16BITS);
+  rtc_ret = HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, sleep_time, RTC_WAKEUPCLOCK_CK_SPRE_16BITS);
 
 //  strcpy((char*)buf, "sleep\r\n");
 //  HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
