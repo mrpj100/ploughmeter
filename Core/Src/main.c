@@ -279,7 +279,7 @@ int main(void)
 
   //Enable Sensor 3v3
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);
-   HAL_Delay(100);
+   HAL_Delay(500);
 
    load_cell_connected = setup_load_cell_sensor(); // returns true on success
    //tilt_sensor_connected = setup_tilt_sensor();
@@ -291,7 +291,7 @@ int main(void)
 
   //Enable Radio Modem
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
-  HAL_Delay(400);
+  HAL_Delay(500);
   assemble_and_send_packet();
   //turn on led
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
@@ -311,11 +311,11 @@ int main(void)
   uint32_t deployment_packet_count;
 
   uint32_t sleep_time;
-  // note that it takes 4 seconds to wake up and produce a packet, so all sleep times need to be shortened by 4s.
-  #define DEPLOYMENT_PACKET_SLEEP 6 // sleep for 6 seconds between deployment packets (giving a packet every 10s)
+  // note that it takes 5 seconds to wake up and produce a packet, so all sleep times need to be shortened by 5s.
+  #define DEPLOYMENT_PACKET_SLEEP 5 // sleep for 5 seconds between deployment packets (giving a packet every 10s)
   #define DEPLOYMENT_PACKET_TOTAL_COUNT 10 // 10 deployment packets before we go to long-term mode (just for testing)
 
-  #define LONG_TERM_SLEEP 56 // 56 seconds sleep + 4s = 1 packet per minute for testing
+  #define LONG_TERM_SLEEP 55 // 56 seconds sleep + 5s = 1 packet per minute for testing
 
   // read values from RTC backup registers
   HAL_PWR_EnableBkUpAccess(); // enable access to the Backup Registers
@@ -1105,6 +1105,8 @@ IMU_DATA read_imu_sensor(void){
 	cmd_buf[0] = ICM20948_MAG_CNTL2;
 	cmd_buf[1] = (mag_control & 0x0) | 0x1;
 	HAL_imu_ret = HAL_I2C_Master_Transmit(&hi2c3, AK09916_ADDR, cmd_buf, 2, MPU9250_I2C_DELAY);
+
+	HAL_Delay(100); // short delay to ensure we have time for IMU to catch up
 
 	//Read CNTL1 register
 	cmd_buf[0] = ICM20948_MAG_CNTL2;
