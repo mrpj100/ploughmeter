@@ -313,9 +313,9 @@ int main(void)
   uint32_t sleep_time;
   // note that it takes 5 seconds to wake up and produce a packet, so all sleep times need to be shortened by 5s.
   #define DEPLOYMENT_PACKET_SLEEP 5 // sleep for 5 seconds between deployment packets (giving a packet every 10s)
-  #define DEPLOYMENT_PACKET_TOTAL_COUNT 10 // 10 deployment packets before we go to long-term mode (just for testing)
+  #define DEPLOYMENT_PACKET_TOTAL_COUNT 720 // 720 deployment packets before we go to long-term mode. At one every 10s, that's two hours (6 packets/minute * 60 minutes * 2 hours = 720)
 
-  #define LONG_TERM_SLEEP 55 // 56 seconds sleep + 5s = 1 packet per minute for testing
+  #define LONG_TERM_SLEEP 595 // 595 seconds sleep + 5s = 600s between packets, which is 1 packet every 10 minutes
 
   // read values from RTC backup registers
   HAL_PWR_EnableBkUpAccess(); // enable access to the Backup Registers
