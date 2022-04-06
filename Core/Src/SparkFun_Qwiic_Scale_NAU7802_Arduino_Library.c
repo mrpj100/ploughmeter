@@ -55,7 +55,7 @@ bool NAU7802_begin(I2C_HandleTypeDef * wirePort, bool initialize)
 
     result &= NAU7802_setLDO(NAU7802_LDO_3V0); //Set LDO to 3.0V - John recommended this in case the battery voltage sags
 
-    result &= NAU7802_setGain(NAU7802_GAIN_128); //Set gain to 128
+    result &= NAU7802_setGain(NAU7802_GAIN_32); //Set gain to 32 - John's recommended value
 
     result &= NAU7802_setSampleRate(NAU7802_SPS_80); //Set samples per second to 10
 
